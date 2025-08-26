@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My News Post — Publish News Quickly</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#06b6d4;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,'Helvetica Neue',Arial; background:linear-gradient(180deg,#071029 0%, #071a2a 60%);color:#e6eef6}
+    .container{max-width:1100px;margin:28px auto;padding:18px}
+
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:700;color:#021124}
+    h1{font-size:20px;margin:0}
+    p.lead{color:var(--muted);margin:0;font-size:13px}
+
+    main{display:grid;grid-template-columns:360px 1fr;gap:18px}
+
+    /* Composer */
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    input[type="text"], textarea, input[type="file"], select{width:100%;padding:10px;border-radius:8px;background:var(--glass);border:1px solid rgba(255,255,255,0.04);color:inherit;font-size:14px}
+    textarea{min-height:120px;resize:vertical}
+    .row{display:flex;gap:8px}
+    .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#60a5fa);border:none;color:#021124;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .preview{margin-top:10px;border-radius:8px;overflow:hidden;border:1px dashed rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));padding:8px;text-align:center}
+    .preview img{max-width:100%;height:auto;border-radius:6px}
+
+    /* Feed */
+    .feed{display:grid;gap:12px}
+    .post{display:flex;gap:12px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));align-items:flex-start;border:1px solid rgba(255,255,255,0.02)}
+    .post .thumb{width:140px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#081025}
+    .post .thumb img{width:100%;display:block}
+    .post .body{flex:1}
+    .meta{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px;margin-bottom:6px}
+    .title{font-size:16px;margin:0 0 6px 0}
+    .desc{color:#d8e6f2;font-size:14px;margin-bottom:8px;white-space:pre-wrap}
+    .controls{display:flex;gap:8px}
+    .pill{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
+
+    /* Empty state */
+    .empty{padding:28px;border-radius:12px;text-align:center;color:var(--muted);border:1px dashed rgba(255,255,255,0.03)}
+
+    footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* Responsiveness */
+    @media (max-width:900px){main{grid-template-columns:1fr} .post .thumb{width:120px} .logo{width:44px;height:44px} }
+    @media (max-width:520px){.post{flex-direction:column}.post .thumb{width:100%}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">MNP</div>
+        <div>
+          <h1>My News Post</h1>
+          <p class="lead">Post news quickly — add an image, a title and a short description. Saved in your browser.</p>
+        </div>
+      </div>
+      <div>
+        <button id="clearAll" class="btn ghost">Clear all posts</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h3 style="margin:0 0 10px 0">Create a news post</h3>
+        <form id="composer">
+          <label for="postTitle">Title</label>
+          <input id="postTitle" type="text" placeholder="Headline (required)" required maxlength="120" />
+
+          <label for="postImage">Image (optional)</label>
+          <input id="postImage" type="file" accept="image/*" />
+          <div class="preview" id="imagePreview" style="display:none"></div>
+
+          <label for="postDesc">Description</label>
+          <textarea id="postDesc" placeholder="Write the news story or description..." maxlength="2000"></textarea>
+
+          <label for="postTags">Tags (comma separated)</label>
+          <input id="postTags" type="text" placeholder="e.g. politics, local, sports" />
+
+          <div style="display:flex;gap:8px;margin-top:10px;align-items:center;justify-content:space-between">
+            <div class="row">
+              <button class="btn" id="publish">Publish</button>
+              <button class="btn ghost" id="saveDraft" type="button">Save draft</button>
+            </div>
+            <div style="color:var(--muted);font-size:13px">Local-only: posts saved in your browser</div>
+          </div>
+        </form>
+
+        <div style="margin-top:12px;color:var(--muted);font-size:13px">
+          Tip: you can edit or delete posts from the feed. Images are stored as base64 in your browser — large files will increase storage.
+        </div>
+      </section>
+
+      <section>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <h3 style="margin:0">Feed</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="search" type="text" placeholder="Search title, description or tags" style="padding:8px;border-radius:8px;background:var(--glass);border:1px solid rgba(255,255,255,0.03);width:220px" />
+            <select id="sort" style="padding:8px;border-radius:8px;background:var(--glass);border:1px solid rgba(255,255,255,0.03)">
+              <option value="new">Newest first</option>
+              <option value="old">Oldest first</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="feed" class="feed card" style="min-height:120px;padding:12px"></div>
+      </section>
+    </main>
+
+<footer>
+  Made with ❤️ — 
+  <a href="https://www.M.N.P.com" target="_blank" style="color:#06b6d4;text-decoration:none">
+    https://www.M.N.P.com
+  </a> 
+  . Works offline (localStorage). Export/Import available in settings.
+</footer>
+  </div>
+
+  <script>
+    // Simple client-only news posting app — stores posts in localStorage.
+    (function(){
+      const qs = (s)=>document.querySelector(s);
+      const composer = qs('#composer');
+      const titleIn = qs('#postTitle');
+      const descIn = qs('#postDesc');
+      const imgIn = qs('#postImage');
+      const tagsIn = qs('#postTags');
+      const preview = qs('#imagePreview');
+      const feedEl = qs('#feed');
+      const searchIn = qs('#search');
+      const sortSel = qs('#sort');
+      const clearBtn = qs('#clearAll');
+      const saveDraft = qs('#saveDraft');
+
+      // storage key
+      const KEY = 'mynews_posts_v1';
+
+      // helpers
+      const nowISO = ()=>new Date().toISOString();
+
+      function readPosts(){
+        try{const raw = localStorage.getItem(KEY); return raw? JSON.parse(raw): []}catch(e){console.error(e); return []}
+      }
+      function writePosts(list){ localStorage.setItem(KEY, JSON.stringify(list)); }
+
+      // render feed
+      function render(){
+        const q = (searchIn.value||'').trim().toLowerCase();
+        let posts = readPosts();
+        if(sortSel.value==='new') posts = posts.sort((a,b)=> new Date(b.created) - new Date(a.created)); else posts = posts.sort((a,b)=> new Date(a.created)-new Date(b.created));
+        if(q) posts = posts.filter(p=> (p.title+p.desc+(p.tags||'')).toLowerCase().includes(q));
+
+        feedEl.innerHTML = '';
+        if(posts.length===0){ feedEl.innerHTML = '<div class="empty">No posts yet — create your first news item above.</div>'; return }
+
+        posts.forEach((p, idx)=>{
+          const post = document.createElement('article'); post.className='post';
+          post.innerHTML = `
+            <div class="thumb">${p.image?'<img alt="post image" src="'+p.image+'" />':'<div style="padding:18px;color:var(--muted);font-size:13px;text-align:center">No image</div>'}</div>
+            <div class="body">
+              <div class="meta"><div class="pill">${new Date(p.created).toLocaleString()}</div><div class="pill">${p.tags||''}</div></div>
+              <h4 class="title">${escapeHtml(p.title)}</h4>
+              <div class="desc">${escapeHtml(p.desc)}</div>
+              <div class="controls" style="margin-top:8px">
+                <button class="btn" data-action="edit" data-id="${idx}">Edit</button>
+                <button class="btn ghost" data-action="delete" data-id="${idx}">Delete</button>
+                <button class="btn ghost" data-action="download" data-id="${idx}">Download JSON</button>
+              </div>
+            </div>
+          `;
+          feedEl.appendChild(post);
+        });
+      }
+
+      // escape helper
+      function escapeHtml(str){ if(!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+      // image preview
+      imgIn.addEventListener('change', ()=>{
+        const f = imgIn.files && imgIn.files[0];
+        if(!f) { preview.style.display='none'; preview.innerHTML=''; return }
+        if(f.size > 3_000_000){ // 3MB limit warning
+          alert('Image is larger than 3MB — consider resizing for faster load.');
+        }
+        const reader = new FileReader();
+        reader.onload = (e)=>{ preview.style.display='block'; preview.innerHTML = '<img src="'+e.target.result+'" alt="preview" />'; }
+        reader.readAsDataURL(f);
+      });
+
+      // publish
+      composer.addEventListener('submit', async (ev)=>{
+        ev.preventDefault();
+        const title = titleIn.value.trim();
+        if(!title){ alert('Please add a headline/title.'); titleIn.focus(); return }
+        const desc = descIn.value.trim();
+        const tags = tagsIn.value.trim();
+
+        // load image as base64 if present
+        const f = imgIn.files && imgIn.files[0];
+        let imgData = null;
+        if(f){ imgData = await fileToDataURL(f); }
+
+        const posts = readPosts();
+        posts.push({ title, desc, tags, image: imgData, created: nowISO() });
+        writePosts(posts);
+
+        // reset
+        composer.reset(); preview.style.display='none'; preview.innerHTML='';
+        render();
+      });
+
+      // save draft (simple localStorage draft)
+      saveDraft.addEventListener('click', ()=>{
+        const draft = {title: titleIn.value, desc: descIn.value, tags: tagsIn.value};
+        localStorage.setItem(KEY+'_draft', JSON.stringify(draft));
+        alert('Draft saved locally.');
+      });
+
+      // load draft if exists
+      (function loadDraft(){ try{const d = localStorage.getItem(KEY+'_draft'); if(d){const obj = JSON.parse(d); titleIn.value = obj.title||''; descIn.value = obj.desc||''; tagsIn.value = obj.tags||''; } }catch(e){} })();
+
+      // helpers
+      function fileToDataURL(file){ return new Promise((res, rej)=>{ const r = new FileReader(); r.onload = e=>res(e.target.result); r.onerror = rej; r.readAsDataURL(file); }) }
+
+      // feed buttons (edit/delete/download)
+      feedEl.addEventListener('click', async (ev)=>{
+        const btn = ev.target.closest('button'); if(!btn) return;
+        const action = btn.dataset.action; const id = Number(btn.dataset.id);
+        const posts = readPosts();
+        if(action==='delete'){
+          if(!confirm('Delete this post?')) return;
+          posts.splice(id,1); writePosts(posts); render();
+        } else if(action==='edit'){
+          const p = posts[id];
+          // populate composer with existing (image cannot be placed back into file input programmatically for security)
+          titleIn.value = p.title; descIn.value = p.desc; tagsIn.value = p.tags || '';
+          if(p.image){ preview.style.display='block'; preview.innerHTML = '<img src="'+p.image+'" alt="preview" />'; }
+          // delete original post — user will re-publish to update
+          posts.splice(id,1); writePosts(posts); render();
+          window.scrollTo({top:0,behavior:'smooth'});
+        } else if(action==='download'){
+          const blob = new Blob([JSON.stringify(posts[id], null, 2)], {type:'application/json'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'news-post-'+(new Date(posts[id].created).toISOString())+'.json'; a.click(); URL.revokeObjectURL(url);
+        }
+      });
+
+      // search and sort
+      [searchIn, sortSel].forEach(el=>el.addEventListener('input', render));
+
+      // clear all
+      clearBtn.addEventListener('click', ()=>{
+        if(!confirm('Clear ALL posts? This cannot be undone.')) return; localStorage.removeItem(KEY); render();
+      });
+
+      // initial demo posts if none
+      (function seed(){ if(readPosts().length===0){ const demo = [
+          {title:'Local football final draws record crowd', desc:'A thrilling match ended 3-2 in the last minute. Fans celebrated across the city.', tags:'sports,local', image: null, created: new Date(Date.now()-1000*60*60*24).toISOString()},
+          {title:'New art exhibit opens downtown', desc:'The city gallery opened a new contemporary art exhibit featuring 20 local artists.', tags:'culture,local', image: null, created: new Date().toISOString()}
+        ]; writePosts(demo); }
+      })();
+
+      // render on load
+      render();
+
+      // keyboard shortcut: Ctrl+Enter to publish
+      window.addEventListener('keydown', (e)=>{ if(e.ctrlKey && e.key==='Enter'){ document.getElementById('publish').click(); } });
+
+    })();
+  </script>
+</body>
+</html>
+<footer>
